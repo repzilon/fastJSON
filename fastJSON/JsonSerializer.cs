@@ -245,7 +245,7 @@ namespace fastJSON
         {
             Reflection.Serialize s;
             Reflection.Instance._customSerializer.TryGetValue(obj.GetType(), out s);
-            WriteStringFast(s(obj));
+            WriteRaw(s(obj));
         }
 
         private void WriteEnum(Enum e)
@@ -726,6 +726,11 @@ namespace fastJSON
                 _output.Append(s, runIndex, s.Length - runIndex);
 
             _output.Append('\"');
+        }
+
+        private void WriteRaw(string s)
+        {
+            _output.Append(s);
         }
     }
 }

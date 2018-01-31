@@ -10,6 +10,10 @@ using System.Collections.Specialized;
 
 namespace fastJSON
 {
+    public delegate object DeserializeCallback(object data, Type type);
+    public delegate string Serialize(object data);
+    public delegate object Deserialize(object data, DeserializeCallback cb);
+
     public sealed class JSONParameters
     {
         /// <summary>
@@ -433,7 +437,14 @@ namespace fastJSON
 
         public object ToObject(string json, Type type)
         {
-            //_params.FixValues();
+            object o = new JsonParser(json).Decode();
+            return ToTyped(o, type);
+        }
+
+        public object ToTyped(object o, Type type)
+        {
+            //_params = Parameters;
+            _params.FixValues();
             Type t = null;
             if (type != null && type.IsGenericType)
                 t = Reflection.Instance.GetGenericTypeDefinition(type);
@@ -441,7 +452,9 @@ namespace fastJSON
             if (typeof(IDictionary).IsAssignableFrom(t) || typeof(List<>).IsAssignableFrom(t))
                 _usingglobals = false;
 
-            object o = new JsonParser(json, _params.AllowNonQuotedKeys).Decode(type);
+            if ((type != null) && Reflection.Instance.IsTypeRegistered(type))
+                return Reflection.Instance.CreateCustom(o, type, ToTyped);
+
             if (o == null)
                 return null;
 #if !SILVERLIGHT
@@ -550,7 +563,7 @@ namespace fastJSON
                 return Helper.CreateDateTime((string)value, _params.UseUTCDateTime);
 
             else if (conversionType == typeof(DateTimeOffset))
-                return Helper.CreateDateTimeOffset((string)value);
+                return CreateDateTimeOffset((string)value);
 
             else if (Reflection.Instance.IsTypeRegistered(conversionType))
                 return Reflection.Instance.CreateCustom((string)value, conversionType);
@@ -593,9 +606,17 @@ namespace fastJSON
             {
                 _usingglobals = false;
                 object v = k;
-                var a = k as Dictionary<string, object>;
-                if (a != null)
-                    v = ParseDictionary(a, globals, it, null);
+                if ((it != null) && Reflection.Instance.IsTypeRegistered(it))
+                    v = Reflection.Instance.CreateCustom(k, it, ToTyped);
+                else if (k is Dictionary<string, object>)
+                    v = ParseDictionary(k as Dictionary<string, object>, globals, it, null);
+                else if (k is List<object>)
+                {
+                    if (it != null && it.IsArray)
+                        v = RootArray(k, it);
+                    else
+                        v = RootList(k, it);
+                }
                 else
                     v = ChangeType(k, it);
 
@@ -669,7 +690,9 @@ namespace fastJSON
             if (type == typeof(NameValueCollection))
                 return Helper.CreateNV(d);
             if (type == typeof(StringDictionary))
-                return Helper.CreateSD(d);
+                return CreateSD(d);
+            if ((type != null) && type.IsGenericType && (type.GetGenericTypeDefinition() == typeof(Dictionary<,>)))
+                return RootDictionary(d, type);
 
             if (d.TryGetValue("$i", out tn))
             {
@@ -774,9 +797,9 @@ namespace fastJSON
 #endif
                             case myPropInfoType.Dictionary: oset = CreateDictionary((List<object>)v, pi.pt, pi.GenericTypes, globaltypes); break;
                             case myPropInfoType.StringKeyDictionary: oset = CreateStringKeyDictionary((Dictionary<string, object>)v, pi.pt, pi.GenericTypes, globaltypes); break;
-                            case myPropInfoType.NameValue: oset = Helper.CreateNV((Dictionary<string, object>)v); break;
-                            case myPropInfoType.StringDictionary: oset = Helper.CreateSD((Dictionary<string, object>)v); break;
-                            case myPropInfoType.Custom: oset = Reflection.Instance.CreateCustom((string)v, pi.pt); break;
+                            case myPropInfoType.NameValue: oset = CreateNV((Dictionary<string, object>)v); break;
+                            case myPropInfoType.StringDictionary: oset = CreateSD((Dictionary<string, object>)v); break;
+                            case myPropInfoType.Custom: oset = Reflection.Instance.CreateCustom(v, pi.pt, ToTyped); break;
                             default:
                                 {
                                     if (pi.IsGenericType && pi.IsValueType == false && v is List<object>)
@@ -855,13 +878,12 @@ namespace fastJSON
                 {
                     if (ob is IDictionary)
                         col.Add(ParseDictionary((Dictionary<string, object>)ob, globalTypes, it, null));
-
                     else if (ob is List<object>)
                     {
-                        if (bt.IsGenericType)
-                            col.Add((List<object>)ob);//).ToArray());
+                        if (it.IsArray)
+                            col.Add(RootArray(ob, it));
                         else
-                            col.Add(((List<object>)ob).ToArray());
+                            col.Add(RootList(ob, it));
                     }
                     else
                         col.Add(ChangeType(ob, it));
