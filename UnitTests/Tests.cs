@@ -1889,25 +1889,22 @@ public class tests
         public List<Point[]> l;
     }
     [Test]
-    public static void CustomTypes()
+    public static void CustomTypes_Generic()
     {
-        JSON.RegisterCustomType(typeof(Point),
-            (o) => {
-              var pt = (Point)o;
-              return string.Format("[{0},{1}]", pt.x, pt.y);
-            },
-            (o, cb) => {
-              var l = o as List<object>;
-              return new Point() { x = Convert.ToInt32(l[0]), y = Convert.ToSingle(l[1]) };
-            });
-        JSON.RegisterCustomType(typeof(Complex),
-            (o) => {
-              var c = (Complex)o;
-              return string.Format("[{0},{1}]", c.i, JSON.ToJSON(c.l));
-            },
-            (o, cb) => {
-              var l = o as List<object>;
-              return new Complex() { i = Convert.ToInt32(l[0]), l = (List<Point[]>)cb(l[1], typeof(List<Point[]>)) };
+        JSON.RegisterCustomType<Point>(
+             pt => string.Format("[{0},{1}]", pt.x, pt.y),
+             (o, cb) =>
+             {
+                 var l = o as List<object>;
+                 return new Point() { x = Convert.ToInt32(l[0]), y = Convert.ToSingle(l[1]) };
+             });
+        //
+        JSON.RegisterCustomType<Complex>(
+             c => string.Format("[{0},{1}]", c.i, JSON.ToJSON(c.l)),
+            (o, cb) =>
+            {
+                var l = o as List<object>;
+                return new Complex() { i = Convert.ToInt32(l[0]), l = (List<Point[]>)cb(l[1], typeof(List<Point[]>)) };
             });
 
         var pt1 = new Point() { x = 1, y = 2.3f };
@@ -1916,9 +1913,136 @@ public class tests
         var pt2 = JSON.ToObject<Point>(s);
         Assert.AreEqual(pt1, pt2);
 
-        var c1 = new Complex() {
-          i = 9,
-          l = new List<Point[]>() {
+        var c1 = new Complex()
+        {
+            i = 9,
+            l = new List<Point[]>() {
+            new Point[] {
+              new Point() { x = 1, y = 2.3f },
+              new Point() { x = 2, y = 3.4f },
+            },
+            new Point[] {
+              new Point() { x = 5, y = 6.7f },
+            },
+          }
+        };
+        s = JSON.ToJSON(c1);
+        Console.WriteLine(s);
+        var c2 = JSON.ToObject<Complex>(s);
+        Assert.AreEqual(s, JSON.ToJSON(c2));
+
+        var d1 = new Dictionary<string, List<List<Point>>>() {
+          {"a", new List<List<Point>> {
+            new List<Point> {
+              new Point() { x = 1, y = 2.3f },
+              new Point() { x = 2, y = 3.4f },
+            },
+            new List<Point> {
+              new Point() { x = 5, y = 6.7f },
+            },
+          }}
+        };
+        s = JSON.ToJSON(d1);
+        Console.WriteLine(s);
+        var d2 = JSON.ToObject(s, d1.GetType());
+        Assert.AreEqual(s, JSON.ToJSON(d2));
+    }
+
+
+    [Test]
+    public static void CustomTypes_Generic2()
+    {
+        JSON.RegisterCustomType<Point, List<object>>(
+             //since we know that our point will be serialized to list of object
+             pt => string.Format("[{0},{1}]", pt.x, pt.y),
+             (l, cb) =>
+             {
+                 return new Point() { x = Convert.ToInt32(l[0]), y = Convert.ToSingle(l[1]) };
+             });
+        //
+        JSON.RegisterCustomType<Complex, List<object>>(
+             c => string.Format("[{0},{1}]", c.i, JSON.ToJSON(c.l)),
+            (l, cb) =>
+            {
+                return new Complex() { i = Convert.ToInt32(l[0]), l = (List<Point[]>) cb(l[1], typeof(List<Point[]>)) };
+            });
+
+        var pt1 = new Point() { x = 1, y = 2.3f };
+        var s = JSON.ToJSON(pt1);
+        Console.WriteLine(s);
+        var pt2 = JSON.ToObject<Point>(s);
+        Assert.AreEqual(pt1, pt2);
+
+        var c1 = new Complex()
+        {
+            i = 9,
+            l = new List<Point[]>() {
+            new Point[] {
+              new Point() { x = 1, y = 2.3f },
+              new Point() { x = 2, y = 3.4f },
+            },
+            new Point[] {
+              new Point() { x = 5, y = 6.7f },
+            },
+          }
+        };
+        s = JSON.ToJSON(c1);
+        Console.WriteLine(s);
+        var c2 = JSON.ToObject<Complex>(s);
+        Assert.AreEqual(s, JSON.ToJSON(c2));
+
+        var d1 = new Dictionary<string, List<List<Point>>>() {
+          {"a", new List<List<Point>> {
+            new List<Point> {
+              new Point() { x = 1, y = 2.3f },
+              new Point() { x = 2, y = 3.4f },
+            },
+            new List<Point> {
+              new Point() { x = 5, y = 6.7f },
+            },
+          }}
+        };
+        s = JSON.ToJSON(d1);
+        Console.WriteLine(s);
+        var d2 = JSON.ToObject(s, d1.GetType());
+        Assert.AreEqual(s, JSON.ToJSON(d2));
+    }
+    [Test]
+    public static void CustomTypes()
+    {
+        JSON.RegisterCustomType(typeof(Point),
+            (o) =>
+            {
+                var pt = (Point)o;
+                return string.Format("[{0},{1}]", pt.x, pt.y);
+            },
+            (o, cb) =>
+            {
+                var l = o as List<object>;
+                return new Point() { x = Convert.ToInt32(l[0]), y = Convert.ToSingle(l[1]) };
+            });
+        JSON.RegisterCustomType(typeof(Complex),
+            (o) =>
+            {
+                var c = (Complex)o;
+                return string.Format("[{0},{1}]", c.i, JSON.ToJSON(c.l));
+            },
+            (o, cb) =>
+            {
+                var l = o as List<object>;
+                return new Complex() { i = Convert.ToInt32(l[0]), l = (List<Point[]>)cb(l[1], typeof(List<Point[]>)) };
+            });
+
+        var pt1 = new Point() { x = 1, y = 2.3f };
+        var s = JSON.ToJSON(pt1);
+        Console.WriteLine(s);
+        var pt2 = JSON.ToObject<Point>(s);
+        Assert.AreEqual(pt1, pt2);
+
+        var c1 = new Complex()
+        {
+            i = 9,
+            l = new List<Point[]>() {
             new Point[] {
               new Point() { x = 1, y = 2.3f },
               new Point() { x = 2, y = 3.4f },
