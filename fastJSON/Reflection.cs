@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+#if !ENABLE_IL2CPP
 using System.Reflection.Emit;
+#endif
 using System.Reflection;
 using System.Collections;
 using System.Text;
@@ -103,6 +105,7 @@ namespace fastJSON
         private SafeDictionary<string, Dictionary<string, myPropInfo>> _propertycache = new SafeDictionary<string, Dictionary<string, myPropInfo>>(10);
         private SafeDictionary<Type, Type[]> _genericTypes = new SafeDictionary<Type, Type[]>(10);
         private SafeDictionary<Type, Type> _genericTypeDef = new SafeDictionary<Type, Type>(10);
+#if !ENABLE_IL2CPP
         private static SafeDictionary<short, OpCode> _opCodes;
         private static List<string> _badlistTypes = new List<string>()
         {
@@ -129,6 +132,7 @@ namespace fastJSON
             _opCodes = dict;
             return _opCodes.TryGetValue(code, out opCode);
         }
+#endif
 
         #region bjson custom types
         //internal UnicodeEncoding unicode = new UnicodeEncoding();
@@ -538,12 +542,17 @@ namespace fastJSON
                     var cinfo = objtype.GetConstructor(new Type[] { typeof(int) });
                     if (cinfo != null)
                     {
+#if !ENABLE_IL2CPP
                         DynamicMethod dynMethod = new DynamicMethod("_fcil", objtype, new Type[] { typeof(int) }, true);
                         ILGenerator ilGen = dynMethod.GetILGenerator();
                         ilGen.Emit(OpCodes.Ldarg_0);
                         ilGen.Emit(OpCodes.Newobj, objtype.GetConstructor(new Type[] { typeof(int) }));
                         ilGen.Emit(OpCodes.Ret);
                         c = (CreateList)dynMethod.CreateDelegate(typeof(CreateList));
+#else
+                        ConstructorInfo construct = objtype.GetConstructor(new Type[] { typeof(int) });
+                        c = (cap) => construct.Invoke(new object[] { cap });
+#endif
                         _conlistcache.Add(objtype, c);
                         return c(count);
                     }
@@ -574,15 +583,21 @@ namespace fastJSON
                 {
                     if (objtype.IsClass)
                     {
+#if !ENABLE_IL2CPP
                         DynamicMethod dynMethod = new DynamicMethod("_fcic", objtype, null, true);
                         ILGenerator ilGen = dynMethod.GetILGenerator();
                         ilGen.Emit(OpCodes.Newobj, objtype.GetConstructor(Type.EmptyTypes));
                         ilGen.Emit(OpCodes.Ret);
                         c = (CreateObject)dynMethod.CreateDelegate(typeof(CreateObject));
+#else
+                        ConstructorInfo construct = objtype.GetConstructor(Type.EmptyTypes);
+                        c = () => construct.Invoke(Array.Empty<object>());
+#endif
                         _constrcache.Add(objtype, c);
                     }
                     else // structs
                     {
+#if !ENABLE_IL2CPP
                         DynamicMethod dynMethod = new DynamicMethod("_fcis", typeof(object), null, true);
                         ILGenerator ilGen = dynMethod.GetILGenerator();
                         var lv = ilGen.DeclareLocal(objtype);
@@ -592,6 +607,10 @@ namespace fastJSON
                         ilGen.Emit(OpCodes.Box, objtype);
                         ilGen.Emit(OpCodes.Ret);
                         c = (CreateObject)dynMethod.CreateDelegate(typeof(CreateObject));
+#else
+                        ConstructorInfo construct = objtype.GetConstructor(Type.EmptyTypes);
+                        c = () => construct.Invoke(Array.Empty<object>());
+#endif
                         _constrcache.Add(objtype, c);
                     }
                     return c();
@@ -606,6 +625,7 @@ namespace fastJSON
 
         internal static GenericSetter CreateSetField(Type type, FieldInfo fieldInfo)
         {
+#if !ENABLE_IL2CPP
             Type[] arguments = new Type[2];
             arguments[0] = arguments[1] = typeof(object);
 
@@ -641,8 +661,15 @@ namespace fastJSON
                 il.Emit(OpCodes.Ret);
             }
             return (GenericSetter)dynamicSet.CreateDelegate(typeof(GenericSetter));
+#else
+            return (obj, value) => {
+                fieldInfo.SetValue(obj, value);
+                return obj;
+            };
+#endif
         }
 
+#if !ENABLE_IL2CPP
         internal static FieldInfo GetGetterBackingField(PropertyInfo autoProperty)
         {
             var getMethod = autoProperty.GetGetMethod();
@@ -682,9 +709,11 @@ namespace fastJSON
             }
             return null;
         }
+#endif
 
         internal static GenericSetter CreateSetMethod(Type type, PropertyInfo propertyInfo, bool ShowReadOnlyProperties)
         {
+#if !ENABLE_IL2CPP
             MethodInfo setMethod = propertyInfo.GetSetMethod(ShowReadOnlyProperties);
             if (setMethod == null)
             {
@@ -745,10 +774,22 @@ namespace fastJSON
             il.Emit(OpCodes.Ret);
 
             return (GenericSetter)setter.CreateDelegate(typeof(GenericSetter));
+#else
+            // ShowReadOnlyProperties are not supported for ENABLE_IL2CPP
+            MethodInfo setMethod = propertyInfo.GetSetMethod();
+            if (setMethod == null)
+                return null;
+
+            return (obj, value) => {
+                setMethod.Invoke(obj, new object[] { value });
+                return obj;
+            };
+#endif
         }
 
         internal static GenericGetter CreateGetField(Type type, FieldInfo fieldInfo)
         {
+#if !ENABLE_IL2CPP
             DynamicMethod dynamicGet = new DynamicMethod("_cgf", typeof(object), new Type[] { typeof(object) }, type, true);
 
             ILGenerator il = dynamicGet.GetILGenerator();
@@ -775,6 +816,9 @@ namespace fastJSON
             il.Emit(OpCodes.Ret);
 
             return (GenericGetter)dynamicGet.CreateDelegate(typeof(GenericGetter));
+#else
+            return fieldInfo.GetValue;
+#endif
         }
 
         internal static GenericGetter CreateGetMethod(Type type, PropertyInfo propertyInfo)
@@ -783,6 +827,7 @@ namespace fastJSON
             if (getMethod == null)
                 return null;
 
+#if !ENABLE_IL2CPP
             DynamicMethod getter = new DynamicMethod("_cgm", typeof(object), new Type[] { typeof(object) }, type, true);
 
             ILGenerator il = getter.GetILGenerator();
@@ -816,6 +861,9 @@ namespace fastJSON
             il.Emit(OpCodes.Ret);
 
             return (GenericGetter)getter.CreateDelegate(typeof(GenericGetter));
+#else
+            return obj => getMethod.Invoke(obj, Array.Empty<object>());
+#endif
         }
 
         public Getters[] GetGetters(Type type, /*bool ShowReadOnlyProperties,*/ List<Type> IgnoreAttributes)
