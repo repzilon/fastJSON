@@ -6,8 +6,7 @@ using System.Reflection.Emit;
 using System.Reflection;
 using System.Collections;
 using System.Text;
-using System.Runtime.Serialization;
-#if NET4
+#if !NET20
 using System.Linq;
 #endif
 #if !SILVERLIGHT
@@ -60,9 +59,7 @@ namespace fastJSON
         public Reflection.GenericGetter getter;
         public Type[] GenericTypes;
         public string Name;
-        //#if NET4
         public string memberName;
-        //#endif
         public myPropInfoType Type;
         public bool CanWrite;
 
@@ -346,8 +343,8 @@ namespace fastJSON
                     var att = p.GetCustomAttributes(true);
                     foreach (var at in att)
                     {
-#if NET4
-                        if (at is System.Runtime.Serialization.DataMemberAttribute)
+#if NET40 || NET46 || NETCOREAPP || NETSTANDARD2_0
+						if (at is System.Runtime.Serialization.DataMemberAttribute)
                         {
                             var dm = (System.Runtime.Serialization.DataMemberAttribute)at;
                             if (dm.Name != "")
@@ -380,8 +377,8 @@ namespace fastJSON
                         var att = f.GetCustomAttributes(true);
                         foreach (var at in att)
                         {
-#if NET4
-                            if (at is System.Runtime.Serialization.DataMemberAttribute)
+#if NET40 || NET46 || NETCOREAPP || NETSTANDARD2_0
+							if (at is System.Runtime.Serialization.DataMemberAttribute)
                             {
                                 var dm = (System.Runtime.Serialization.DataMemberAttribute)at;
                                 if (dm.Name != "")
@@ -505,8 +502,8 @@ namespace fastJSON
                 }
 
                 Type t = Type.GetType(typename);
-#if NET4
-                if (RDBMode)
+#if NET40 || NET46 || NETCOREAPP || NETSTANDARD2_0
+				if (RDBMode)
                 {
                     if (t == null) // RaptorDB : loading runtime assemblies
                     {
@@ -903,12 +900,12 @@ namespace fastJSON
                         continue;
                 }
                 string mName = null;
-                #if net4
+
                 var att = p.GetCustomAttributes(true);
                 foreach (var at in att)
                 {
-#if NET4
-                    if (at is System.Runtime.Serialization.DataMemberAttribute)
+#if NET40 || NET46 || NETCOREAPP || NETSTANDARD2_0
+					if (at is System.Runtime.Serialization.DataMemberAttribute)
                     {
                         var dm = (System.Runtime.Serialization.DataMemberAttribute)at;
                         if (dm.Name != "")
@@ -926,7 +923,6 @@ namespace fastJSON
                         }
                     }
                 }
-                #endif
                 GenericGetter g = CreateGetMethod(type, p);
                 if (g != null)
                     getters.Add(new Getters { Getter = g, Name = p.Name, lcName = p.Name.ToLowerInvariant(), memberName = mName, ReadOnly = read_only });
@@ -935,52 +931,50 @@ namespace fastJSON
             FieldInfo[] fi = type.GetFields(bf);
             foreach (var f in fi)
             {
-                bool read_only = false;
-                if (f.IsInitOnly) // && (ShowReadOnlyProperties == false))//|| isAnonymous == false))
-                    read_only = true;//continue;
-                if (IgnoreAttributes != null)
-                {
-                    bool found = false;
-                    foreach (var ignoreAttr in IgnoreAttributes)
-                    {
-                        if (f.IsDefined(ignoreAttr, false))
-                        {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (found)
-                        continue;
-                }
-                string mName = null;
-                var att = f.GetCustomAttributes(true);
-                foreach (var at in att)
-                {
-#if NET4
-                    if (at is System.Runtime.Serialization.DataMemberAttribute)
-                    {
-                        var dm = (System.Runtime.Serialization.DataMemberAttribute)at;
-                        if (dm.Name != "")
-                        {
-                            mName = dm.Name;
-                        }
-                    }
+	            bool read_only = f.IsInitOnly;
+	            if (IgnoreAttributes != null)
+	            {
+		            bool found = false;
+		            foreach (var ignoreAttr in IgnoreAttributes)
+		            {
+			            if (f.IsDefined(ignoreAttr, false))
+			            {
+				            found = true;
+				            break;
+			            }
+		            }
+		            if (found)
+			            continue;
+	            }
+	            string mName = null;
+	            var att = f.GetCustomAttributes(true);
+	            foreach (var at in att)
+	            {
+#if NET40 || NET46 || NETCOREAPP || NETSTANDARD2_0
+					if (at is System.Runtime.Serialization.DataMemberAttribute)
+		            {
+			            var dm = (System.Runtime.Serialization.DataMemberAttribute)at;
+			            if (dm.Name != "")
+			            {
+				            mName = dm.Name;
+			            }
+		            }
 #endif
-                    if (at is fastJSON.DataMemberAttribute)
-                    {
-                        var dm = (fastJSON.DataMemberAttribute)at;
-                        if (dm.Name != "")
-                        {
-                            mName = dm.Name;
-                        }
-                    }
-                }
-                if (f.IsLiteral == false)
-                {
-                    GenericGetter g = CreateGetField(type, f);
-                    if (g != null)
-                        getters.Add(new Getters { Getter = g, Name = f.Name, lcName = f.Name.ToLowerInvariant(), memberName = mName, ReadOnly = read_only });
-                }
+		            if (at is fastJSON.DataMemberAttribute)
+		            {
+			            var dm = (fastJSON.DataMemberAttribute)at;
+			            if (dm.Name != "")
+			            {
+				            mName = dm.Name;
+			            }
+		            }
+	            }
+	            if (f.IsLiteral == false)
+	            {
+		            GenericGetter g = CreateGetField(type, f);
+		            if (g != null)
+			            getters.Add(new Getters { Getter = g, Name = f.Name, lcName = f.Name.ToLowerInvariant(), memberName = mName, ReadOnly = read_only });
+	            }
             }
             val = getters.ToArray();
             _getterscache.Add(type, val);

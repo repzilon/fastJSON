@@ -36,7 +36,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>..\output\net40\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;NET4</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NET40;NETFRAMEWORK</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -44,7 +44,7 @@
     <Optimize>true</Optimize>
     <OutputPath>..\output\net40\</OutputPath>
     <DebugSymbols>true</DebugSymbols>
-    <DefineConstants>NET4</DefineConstants>
+    <DefineConstants>TRACE;NET40;NETFRAMEWORK</DefineConstants>
     <DocumentationFile>fastJSON.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

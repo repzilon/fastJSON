@@ -253,13 +253,13 @@ namespace fastJSON
         {
             return new JsonParser(json, Parameters.AllowNonQuotedKeys).Decode(null);
         }
-#if NET4
-        /// <summary>
-        /// Create a .net4 dynamic object from the json string
-        /// </summary>
-        /// <param name="json"></param>
-        /// <returns></returns>
-        public static dynamic ToDynamic(string json)
+#if NET40 || NET46 || NETCOREAPP || NETSTANDARD2_0
+		/// <summary>
+		/// Create a .net4 dynamic object from the json string
+		/// </summary>
+		/// <param name="json"></param>
+		/// <returns></returns>
+		public static dynamic ToDynamic(string json)
         {
             return new DynamicJson(json);
         }

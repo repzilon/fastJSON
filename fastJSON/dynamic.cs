@@ -1,4 +1,4 @@
-﻿#if NET4
+﻿#if NET40 || NET46 || NETCOREAPP || NETSTANDARD2_0
 using System;
 using System.Collections;
 using System.Collections.Generic;

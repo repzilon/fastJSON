@@ -1,15 +1,23 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26730.15
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35825.156
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Consoletest", "Consoletest\consoletest.csproj", "{6BADD8B3-618E-412A-BBCA-8420EFD5B62E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "consoletest", "Consoletest\consoletest.csproj", "{6BADD8B3-618E-412A-BBCA-8420EFD5B62E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fastJSON", "fastJSON\fastJSON.csproj", "{207E91B1-C9F8-4913-88E1-3549EF5F3273}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{F4BFF0D2-45F6-413B-B1E7-BC4A0D6596FC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fastJSON 3.5", "fastJSON 3.5\fastJSON 3.5.csproj", "{FDAF5695-E651-4D4D-8E15-0BD9FBEF5069}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "fastJSON-net20", "fastJSON 3.5\fastJSON-net20.csproj", "{FDAF5695-E651-4D4D-8E15-0BD9FBEF5069}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		history.txt = history.txt
+		Howto.md = Howto.md
+		LICENSE = LICENSE
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
