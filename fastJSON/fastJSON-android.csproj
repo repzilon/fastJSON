@@ -10,15 +10,17 @@
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
     <AssemblyName>fastJSON-android</AssemblyName>
+    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>True</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>False</Optimize>
     <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG; SILVERLIGHT</DefineConstants>
+    <DefineConstants>DEBUG;SILVERLIGHT</DefineConstants>
     <ConsolePause>False</ConsolePause>
     <AndroidLinkMode>None</AndroidLinkMode>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -28,6 +30,8 @@
     <AndroidLinkMode>SdkOnly</AndroidLinkMode>
     <AndroidUseSharedRuntime>False</AndroidUseSharedRuntime>
     <DocumentationFile>fastJSON-android.xml</DocumentationFile>
+    <DefineConstants>SILVERLIGHT</DefineConstants>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -39,6 +43,7 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Getters.cs" />
     <Compile Include="Formatter.cs" />
+    <Compile Include="Helper.cs" />
     <Compile Include="JsonSerializer.cs" />
     <Compile Include="JSON.cs" />
     <Compile Include="JsonParser.cs" />

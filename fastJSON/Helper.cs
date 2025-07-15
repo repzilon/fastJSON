@@ -244,11 +244,7 @@ namespace fastJSON
         public static object CreateEnum(Type pt, object v)
         {
             // FEATURE : optimize create enum
-#if !SILVERLIGHT
             return Enum.Parse(pt, v.ToString(), true);
-#else
-            return Enum.Parse(pt, v, true);
-#endif
         }
 
         public static Guid CreateGuid(string s)
