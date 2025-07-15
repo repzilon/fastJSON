@@ -291,7 +291,7 @@ public class tests
 
     #endregion
 
-    [OneTimeSetUp]
+    [TestFixtureSetUp]
     public static void setup()
     {
         //fastJSON.JSON.Parameters = new JSONParameters();
@@ -3179,18 +3179,18 @@ public class tests
 
     public class Circle
     {
-        public Point Center { get; set; }
+        public PointClass Center { get; set; }
         public int Radius { get; set; }
     }
 
-    public class Point
+    public class PointClass
     {
         public int X { get; set; }
         public int Y { get; set; }
 
-        public Point() { X = Y = 0; }
+        public PointClass() { X = Y = 0; }
 
-        public Point(int x, int y)
+        public PointClass(int x, int y)
         {
             X = x;
             Y = y;
@@ -3198,7 +3198,7 @@ public class tests
 
         public override bool Equals(object obj)
         {
-            if (obj is Point p) return p.X == X && p.Y == Y;
+            if (obj is PointClass p) return p.X == X && p.Y == Y;
             return false;
         }
 
@@ -3211,10 +3211,10 @@ public class tests
     [Test]
     public static void refchecking1()
     {
-        var p = new Point(0, 1);
+        var p = new PointClass(0, 1);
         var circles = new Circle[]
         {
-            new Circle() { Center = new Point(0, 0), Radius = 1 },
+            new Circle() { Center = new PointClass(0, 0), Radius = 1 },
             new Circle() { Center = p, Radius = 2 },
             new Circle() { Center = p, Radius = 3 }
         };
@@ -3230,9 +3230,9 @@ public class tests
     {
         var circles = new Circle[]
         {
-            new Circle() { Center = new Point(0, 0), Radius = 1 },
-            new Circle() { Center = new Point(0, 1), Radius = 2 },
-            new Circle() { Center = new Point(0, 1), Radius = 3 }
+            new Circle() { Center = new PointClass(0, 0), Radius = 1 },
+            new Circle() { Center = new PointClass(0, 1), Radius = 2 },
+            new Circle() { Center = new PointClass(0, 1), Radius = 3 }
         };
         var jp = new JSONParameters { OverrideObjectHashCodeChecking = true, InlineCircularReferences = true };
 

@@ -437,7 +437,7 @@ namespace fastJSON
 
         public object ToObject(string json, Type type)
         {
-            object o = new JsonParser(json).Decode();
+            object o = new JsonParser(json, _params.AllowNonQuotedKeys).Decode(type);
             return ToTyped(o, type);
         }
 
@@ -563,10 +563,10 @@ namespace fastJSON
                 return Helper.CreateDateTime((string)value, _params.UseUTCDateTime);
 
             else if (conversionType == typeof(DateTimeOffset))
-                return CreateDateTimeOffset((string)value);
+                return Helper.CreateDateTimeOffset((string)value);
 
             else if (Reflection.Instance.IsTypeRegistered(conversionType))
-                return Reflection.Instance.CreateCustom((string)value, conversionType);
+                return Reflection.Instance.CreateCustom(value, conversionType, null); // FIXME
 
             // 8-30-2014 - James Brooks - Added code for nullable types.
             if (Helper.IsNullable(conversionType))
@@ -690,7 +690,7 @@ namespace fastJSON
             if (type == typeof(NameValueCollection))
                 return Helper.CreateNV(d);
             if (type == typeof(StringDictionary))
-                return CreateSD(d);
+                return Helper.CreateSD(d);
             if ((type != null) && type.IsGenericType && (type.GetGenericTypeDefinition() == typeof(Dictionary<,>)))
                 return RootDictionary(d, type);
 
@@ -797,8 +797,8 @@ namespace fastJSON
 #endif
                             case myPropInfoType.Dictionary: oset = CreateDictionary((List<object>)v, pi.pt, pi.GenericTypes, globaltypes); break;
                             case myPropInfoType.StringKeyDictionary: oset = CreateStringKeyDictionary((Dictionary<string, object>)v, pi.pt, pi.GenericTypes, globaltypes); break;
-                            case myPropInfoType.NameValue: oset = CreateNV((Dictionary<string, object>)v); break;
-                            case myPropInfoType.StringDictionary: oset = CreateSD((Dictionary<string, object>)v); break;
+                            case myPropInfoType.NameValue: oset = Helper.CreateNV((Dictionary<string, object>)v); break;
+                            case myPropInfoType.StringDictionary: oset = Helper.CreateSD((Dictionary<string, object>)v); break;
                             case myPropInfoType.Custom: oset = Reflection.Instance.CreateCustom(v, pi.pt, ToTyped); break;
                             default:
                                 {

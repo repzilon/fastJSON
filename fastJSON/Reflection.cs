@@ -88,7 +88,7 @@ namespace fastJSON
         public static bool RDBMode = false;
 
         public delegate string Serialize(object data);
-        public delegate object Deserialize(string data);
+        public delegate object Deserialize(object data, DeserializeCallback cb);
 
         public delegate object GenericSetter(object target, object value);
         public delegate object GenericGetter(object obj);
